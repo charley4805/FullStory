@@ -6,6 +6,20 @@ import { Input } from '../components/ui/Input';
 import { Trash2, ShoppingBag, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Function to track custom events with FullStory
+const trackEvent = (name: string, properties: Record<string, any>) => {
+    const w = window as any;
+    const FS = w.FS;
+
+    if (typeof FS === "function") {
+        FS("trackEvent", { name, properties });
+        return;
+    }
+    if (FS && typeof FS.trackEvent === "function") {
+        FS.trackEvent(name, properties);
+    }
+};
+
 export const CheckoutPage = () => {
     const { items, removeItem, updateQuantity, subtotal, clearCart } = useCart();
     const [formData, setFormData] = useState({
@@ -16,8 +30,6 @@ export const CheckoutPage = () => {
     const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-
-    // TODO: data-fs-element attributes on key elements
 
     const validate = () => {
         const newErrors: { name?: string; email?: string } = {};
@@ -38,13 +50,20 @@ export const CheckoutPage = () => {
         if (!validate()) return;
 
         setIsSubmitting(true);
-        // Simulate API call
+        // API call
         setTimeout(() => {
             setIsSubmitting(false);
             setIsSuccess(true);
+            // Custom Event: critical action
+            trackEvent("Checkout Completed", {
+                orderTotal: subtotal,
+                itemCount: items.length,
+                subscribe: formData.subscribe ? "true" : "false",
+            });
+
             clearCart();
-            // TODO: extracted element properties (data-fs-properties-schema) on Checkout submit
         }, 1500);
+
     };
 
     if (isSuccess) {
@@ -85,7 +104,6 @@ export const CheckoutPage = () => {
 
     return (
         <div className="min-h-screen bg-background pt-8 pb-20">
-            {/* TODO: page naming on route change (e.g. Fullstory API) */}
             <div className="container mx-auto px-4">
                 <h1 className="text-3xl font-bold text-white mb-8">Checkout</h1>
 
@@ -126,8 +144,9 @@ export const CheckoutPage = () => {
                                                         +
                                                     </button>
                                                 </div>
-
+                                                {/* Element Attribute */}
                                                 <Button
+                                                    data-fs-element="Remove Item Button"
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => removeItem(item.id)}
@@ -149,22 +168,22 @@ export const CheckoutPage = () => {
                         <Card className="sticky top-24">
                             <form onSubmit={handleSubmit} className="p-6 space-y-6">
                                 <h2 className="text-xl font-bold text-white mb-4">Order Summary</h2>
-
+                                {/* Element Attributes */}
                                 <div className="space-y-4">
                                     <Input
+                                        data-fs-element="Checkout Full Name Input"
                                         label="Full Name"
                                         placeholder="Enter your name"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         error={errors.name}
                                     />
-                                    <Input
-                                        label="Email Address"
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        error={errors.email}
+                                    <input
+                                        data-fs-element="Subscribe Checkbox"
+                                        type="checkbox"
+                                        checked={formData.subscribe}
+                                        onChange={(e) => setFormData({ ...formData, subscribe: e.target.checked })}
+                                        className="form-checkbox h-4 w-4 text-primary rounded border-slate-700 bg-surface focus:ring-primary focus:ring-offset-background"
                                     />
 
                                     <label className="flex items-center space-x-2 cursor-pointer group">
@@ -192,10 +211,25 @@ export const CheckoutPage = () => {
                                         <span>${subtotal.toFixed(2)}</span>
                                     </div>
                                 </div>
-
-                                <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
+                                {/* Element Attribute */}
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    size="lg"
+                                    isLoading={isSubmitting}
+                                    data-fs-element="Place Order Button"
+                                    data-order-total={subtotal}
+                                    data-item-count={items.length}
+                                    data-subscribe={formData.subscribe ? "true" : "false"}
+                                    data-fs-properties-schema={JSON.stringify({
+                                        "data-order-total": { type: "real", name: "orderTotal" },
+                                        "data-item-count": { type: "int", name: "itemCount" },
+                                        "data-subscribe": { type: "bool", name: "subscribe" },
+                                    })}
+                                >
                                     Place Order
                                 </Button>
+
 
                                 <Link to="/" className="block text-center text-sm text-slate-500 hover:text-primary transition-colors">
                                     <span className="flex items-center justify-center gap-1">

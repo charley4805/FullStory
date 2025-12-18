@@ -7,6 +7,23 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Search, Filter, Plus, Minus, Check } from 'lucide-react';
 
+const trackEvent = (name: string, properties: Record<string, any>) => {
+    const w = window as any;
+    const FS = w.FS;
+
+    // Most common: FS is a function (command queue)
+    if (typeof FS === "function") {
+        FS("trackEvent", { name, properties });
+        return;
+    }
+
+    // Fallback: some environments expose a method
+    if (FS && typeof FS.trackEvent === "function") {
+        FS.trackEvent(name, properties);
+    }
+};
+
+
 export const BrowsePage = () => {
     const { addItem } = useCart();
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,14 +58,29 @@ export const BrowsePage = () => {
             setAddedItems((prev) => ({ ...prev, [product.id]: false }));
         }, 2000);
 
-        // FullStory TODO
-        // TODO: custom event tracking for "Item Added To Cart"
-        // TODO: extracted element properties (data-fs-properties-schema) on Add to cart
+        // Custom Event: critical action
+        trackEvent("Item Added To Cart", {
+            productId: product.id,          // string
+            productName: product.name,      // string (bonus)
+            quantity: qty,                  // number
+            unitPrice: product.price,       // number (bonus)
+        });
     };
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
-        // TODO: custom event tracking for "Search Performed"
+    };
+
+    // Search Event: critical action
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== "Enter") return;
+
+        const query = searchQuery.trim();
+        trackEvent("Search Performed", {
+            query: query,
+            resultsCount: filteredProducts.length,
+            category: selectedCategory,
+        });
     };
 
     return (
@@ -71,16 +103,19 @@ export const BrowsePage = () => {
                     <div className="w-full md:w-96 relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                         <Input
+                            data-fs-element="Product Search Box"
                             placeholder="Search products..."
                             className="pl-10 h-10"
                             value={searchQuery}
                             onChange={handleSearch}
+                            onKeyDown={handleSearchKeyDown}
                         />
                     </div>
 
                     <div className="flex items-center space-x-2">
                         <Filter className="h-4 w-4 text-slate-400" />
                         <select
+                            data-fs-element="Category Filter Dropdown"
                             className="h-10 bg-surface border border-slate-700 rounded-lg px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -112,8 +147,7 @@ export const BrowsePage = () => {
                                         </span>
                                     </div>
                                 )}
-                                {/* FullStory Element Attribute */}
-                                {/* TODO: data-fs-element attributes on key elements */}
+                                {/* Element Attribute */}
                                 <div className="absolute top-2 right-2">
                                     <span className="bg-surface/90 backdrop-blur text-xs font-bold px-2 py-1 rounded border border-white/10 text-accent">
                                         {product.category}
@@ -136,6 +170,7 @@ export const BrowsePage = () => {
                                         {/* Quantity Selector */}
                                         <div className="flex items-center bg-background rounded-lg border border-slate-700 h-9">
                                             <button
+                                                data-fs-element="Quantity Decrease Button"
                                                 className="px-2 text-slate-400 hover:text-white transition-colors"
                                                 onClick={() => handleQuantityChange(product.id, -1)}
                                                 disabled={!product.inStock}
@@ -146,6 +181,7 @@ export const BrowsePage = () => {
                                                 {quantities[product.id] || 1}
                                             </span>
                                             <button
+                                                data-fs-element="Quantity Increase Button"
                                                 className="px-2 text-slate-400 hover:text-white transition-colors"
                                                 onClick={() => handleQuantityChange(product.id, 1)}
                                                 disabled={!product.inStock}
@@ -155,6 +191,17 @@ export const BrowsePage = () => {
                                         </div>
 
                                         <Button
+                                            data-fs-element="Add To Cart Button"
+
+                                            data-product-id={product.id}
+                                            data-unit-price={product.price}
+                                            data-in-stock={product.inStock ? "true" : "false"}
+                                            data-fs-properties-schema={JSON.stringify({
+                                                "data-product-id": { type: "str", name: "productId" },
+                                                "data-unit-price": { type: "real", name: "unitPrice" },
+                                                "data-in-stock": { type: "bool", name: "inStock" },
+                                            })}
+
                                             size="sm"
                                             disabled={!product.inStock}
                                             onClick={() => handleAddToCart(product)}
