@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+Fullstory Strategic Solutions Demo – STEAM Store
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a simple single-page web application built to demonstrate intentional Fullstory data modeling using the JavaScript API. The app represents a small kids’ STEAM activity storefront with a realistic purchase flow: browse products, search and filter, add items to a cart, and complete checkout.
 
-Currently, two official plugins are available:
+The goal of the demo is not visual complexity, but clarity—showing how properly modeled behavioral data enables teams to understand why users convert or drop off, not just that they did.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Live Demo
 
-## React Compiler
+Live Site: https://charley4805.github.io/FullStory/
+Source Code: https://github.com/charley4805/FullStory
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the ESLint configuration
+Tech Stack & Design Choices
+React – Used to create a fast, responsive single-page experience that mirrors modern e-commerce and SaaS applications.
+TypeScript – Helps prevent errors in critical flows like cart updates and checkout, improving reliability and maintainability.
+Tailwind CSS – Enables rapid UI iteration and consistent styling without introducing unnecessary complexity.
+Vite – Provides fast local development and simple deployment to GitHub Pages.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Fullstory Instrumentation Overview
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Page Naming (FS API)
+Page names are set programmatically on route change:
+Browse: Products
+Checkout
+Implemented centrally at the routing layer to ensure consistency.
+Custom Events
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Key user actions are captured with typed properties:
+Search Performed
+Item Added To Cart
+Checkout Completed 
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+API Element Naming (data-fs-element)
+Product Search Box
+Category Filter Dropdown
+Add To Cart Button
+Place Order Button
+Checkout form inputs
+Extracted Element Properties
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Important business data is attached directly to interactions using data-fs-properties-schema, including:
+Product ID, price, and stock status on Add To Cart
+Order total, item count, and subscription intent on Checkout
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+AI Tools Used
+ChatGPT – Used to assist with structuring and refining documentation.
+Antigravity – Used for UI.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+Business Value Translation
+
+This demo was built as a simple kids’ STEAM shopping experience because it reflects a very common real-world flow: browsing, searching, adding items to a cart, and checking out. React keeps the experience fast and responsive, TypeScript helps prevent errors in critical checkout flows, and Tailwind allows quick UI iteration without adding complexity—helping the site feel smooth and trustworthy so parents are more likely to complete a purchase.
+
+Using Fullstory’s JavaScript API, user behavior is intentionally modeled instead of relying on generic analytics. By programmatically naming pages, key buttons, and form inputs—and attaching meaningful data like product IDs, prices, quantities, and subscription intent—teams can quickly see where users hesitate or drop off. This API-driven approach preserves user intent and context, making behavior searchable and actionable across product, marketing, and support teams. When teams can clearly understand why users struggle and fix issues faster, conversion improves and Fullstory becomes a natural platform for renewal and expansion.
